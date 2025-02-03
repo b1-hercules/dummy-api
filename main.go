@@ -35,33 +35,35 @@ var books = []Book{
 func login(c *gin.Context) {
     var request LoginRequest
     if err := c.ShouldBindJSON(&request); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Logika autentikasi (contoh sederhana)
     if request.Username != "admin" || request.Password != "password" {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-        return
-    }
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 
 	// Buat token JWT
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-        "username": request.Username,
-        "exp":      time.Now().Add(time.Hour * 72).Unix(),
-    })
+		"username": request.Username,
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+	})
 
 	tokenString, err := token.SignedString(secretKey)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
-        return
-    }
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
+	}
 
     c.JSON(http.StatusOK, gin.H{
-        "response_code":        "00",
-        "response_description": "success",
-        "token":                tokenString,
-    })
+		"response_code":        "00",
+		"response_description": "success",
+		"response_data": gin.H{
+			"token": tokenString,
+		},
+	})
 }
 
 // Middleware untuk otentikasi JWT
@@ -100,7 +102,7 @@ func getBooks(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
         "response_code":        "00",
         "response_description": "success",
-        "data":                 books,
+        "response_data":                 books,
     })
 }
 
