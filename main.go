@@ -33,31 +33,35 @@ var books = []Book{
 
 // Handler untuk login
 func login(c *gin.Context) {
-	var req LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+    var request LoginRequest
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	// Contoh validasi username dan password (harusnya dari database)
-	if req.Username != "admin" || req.Password != "password" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+	// Logika autentikasi (contoh sederhana)
+    if request.Username != "admin" || request.Password != "password" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
 
-	// Membuat token JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": req.Username,
-		"exp":      time.Now().Add(time.Hour * 1).Unix(), // Expired dalam 1 jam
-	})
+	// Buat token JWT
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "username": request.Username,
+        "exp":      time.Now().Add(time.Hour * 72).Unix(),
+    })
 
 	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+    c.JSON(http.StatusOK, gin.H{
+        "response_code":        "00",
+        "response_description": "success",
+        "token":                tokenString,
+    })
 }
 
 // Middleware untuk otentikasi JWT
@@ -93,7 +97,11 @@ func authMiddleware() gin.HandlerFunc {
 
 // Handler untuk mendapatkan daftar buku
 func getBooks(c *gin.Context) {
-	c.JSON(http.StatusOK, books)
+    c.JSON(http.StatusOK, gin.H{
+        "response_code":        "00",
+        "response_description": "success",
+        "data":                 books,
+    })
 }
 
 func main() {
